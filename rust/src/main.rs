@@ -1,6 +1,6 @@
 mod day01;
 
 fn main() {
-    let result = day01::problem1();
+    let result = day01::problem2();
     println!("{}", result);
 }
