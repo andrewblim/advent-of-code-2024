@@ -2,11 +2,12 @@ use std::env;
 use itertools::Itertools;
 
 mod day01;
+mod day02;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() == 1 {
-        day01::problem2();
+        day02::problem1();
     } else {
         let problem = args[1..]
             .into_iter()
@@ -15,6 +16,8 @@ fn main() {
         match problem {
             Some((1, 1)) => day01::problem1(),
             Some((1, 2)) => day01::problem2(),
+            Some((2, 1)) => day02::problem1(),
+            Some((2, 2)) => day02::problem2(),
             _ => panic!("Unrecognized problem arguments {:?}", args)
         }
     }
