@@ -65,32 +65,27 @@ fn problem2_str(data: String) -> i64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::*;
 
-    #[test]
-    fn problem1_test() {
-        let input = String::from("\
+    #[fixture]
+    fn input1() -> String {
+        String::from("\
             3   4
             4   3
             2   5
             1   3
             3   9
             3   3
-        ");
-        let result = problem1_str(input);
-        assert_eq!(result, 11);
+        ")
     }
 
-    #[test]
-    fn problem2_test() {
-        let input = String::from("\
-            3   4
-            4   3
-            2   5
-            1   3
-            3   9
-            3   3
-        ");
-        let result = problem2_str(input);
-        assert_eq!(result, 31);
+    #[rstest]
+    fn problem1_test(input1: String) {
+        assert_eq!(problem1_str(input1), 11);
+    }
+
+    #[rstest]
+    fn problem2_test(input1: String) {
+        assert_eq!(problem2_str(input1), 31);
     }
 }
