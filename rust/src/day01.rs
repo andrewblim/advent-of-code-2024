@@ -1,12 +1,12 @@
 use std::fs;
 use itertools::Itertools;
 
-pub fn problem1() -> i64 {
-    problem1_str(read_data())
+pub fn problem1() {
+    println!("{}", problem1_str(read_data()));
 }
 
-pub fn problem2() -> i64 {
-    problem2_str(read_data())
+pub fn problem2() {
+    println!("{}", problem2_str(read_data()));
 }
 
 fn read_data() -> String {
