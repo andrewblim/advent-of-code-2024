@@ -53,8 +53,62 @@ fn problem1_str(data: String) -> u64 {
 }
 
 fn problem2_str(data: String) -> u64 {
-    unimplemented!();
+    let mut locs: HashMap<char, HashSet<(isize, isize)>> = HashMap::from([
+        ('M', HashSet::new()),
+        ('A', HashSet::new()),
+        ('S', HashSet::new()),
+    ]);
+    for (r, line) in data.trim().split("\n").enumerate() {
+        for (c, ch) in line.chars().enumerate() {
+            if let Some(pts) = locs.get_mut(&ch) {
+                (*pts).insert((r.try_into().unwrap(), c.try_into().unwrap()));
+            }
+        }
+    }
+    let mut count = 0;
+    for &(r, c) in locs.get(&'A').unwrap().iter() {
+        if has_cross_around(&locs, (r, c)) {
+            count += 1;
+        }
+    }
+    count
 }
+
+fn has_cross_around(locs: &HashMap<char, HashSet<(isize, isize)>>, (r, c): (isize, isize)) -> bool {
+    let nw = if locs.get(&'M').unwrap().contains(&(r - 1, c - 1)) {
+        'M'
+    } else if locs.get(&'S').unwrap().contains(&(r - 1, c - 1)) {
+        'S'
+    } else {
+        '.'
+    };
+    let ne = if locs.get(&'M').unwrap().contains(&(r - 1, c + 1)) {
+        'M'
+    } else if locs.get(&'S').unwrap().contains(&(r - 1, c + 1)) {
+        'S'
+    } else {
+        '.'
+    };
+    let sw = if locs.get(&'M').unwrap().contains(&(r + 1, c - 1)) {
+        'M'
+    } else if locs.get(&'S').unwrap().contains(&(r + 1, c - 1)) {
+        'S'
+    } else {
+        '.'
+    };
+    let se = if locs.get(&'M').unwrap().contains(&(r + 1, c + 1)) {
+        'M'
+    } else if locs.get(&'S').unwrap().contains(&(r + 1, c + 1)) {
+        'S'
+    } else {
+        '.'
+    };
+    (nw, ne, se, sw) == ('M', 'M', 'S', 'S') ||
+        (nw, ne, se, sw) == ('M', 'S', 'S', 'M') ||
+        (nw, ne, se, sw) == ('S', 'S', 'M', 'M') ||
+        (nw, ne, se, sw) == ('S', 'M', 'M', 'S')
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -84,6 +138,6 @@ MXMXAXMASX
 
     #[rstest]
     fn problem2_test(input1: String) {
-        assert_eq!(problem2_str(input1), 48);
+        assert_eq!(problem2_str(input1), 9);
     }
 }
