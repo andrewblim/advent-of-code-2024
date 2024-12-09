@@ -4,6 +4,7 @@ use itertools::Itertools;
 mod day01;
 mod day02;
 mod day03;
+mod day04;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -21,6 +22,8 @@ fn main() {
             Some((2, 2)) => day02::problem2(),
             Some((3, 1)) => day03::problem1(),
             Some((3, 2)) => day03::problem2(),
+            Some((4, 1)) => day04::problem1(),
+            Some((4, 2)) => day04::problem2(),
             _ => panic!("Unrecognized problem arguments {:?}", args)
         }
     }
