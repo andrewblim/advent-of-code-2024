@@ -14,37 +14,23 @@ fn read_data() -> String {
         .expect("Error reading file")
 }
 
-const ADJACENCIES: [(isize, isize); 8] = [
-    (-1, -1),
-    (-1, 0),
-    (-1, 1),
-    (0, -1),
-    (0, 1),
-    (1, -1),
-    (1, 0),
-    (1, 1),
-];
-
 fn problem1_str(data: String) -> u64 {
-    let mut locs: HashMap<char, HashSet<(isize, isize)>> = HashMap::from([
-        ('X', HashSet::new()),
-        ('M', HashSet::new()),
-        ('A', HashSet::new()),
-        ('S', HashSet::new()),
-    ]);
-    for (r, line) in data.trim().split("\n").enumerate() {
-        for (c, ch) in line.chars().enumerate() {
-            if let Some(pts) = locs.get_mut(&ch) {
-                (*pts).insert((r.try_into().unwrap(), c.try_into().unwrap()));
-            }
-        }
-    }
+    const DIRECTIONS: [(isize, isize); 8] = [
+        (-1, -1),
+        (-1, 0),
+        (-1, 1),
+        (0, -1),
+        (0, 1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
+    ];
+
+    let locs = point_map(&data, &['X', 'M', 'A', 'S']);
     let mut count = 0;
-    for &(r, c) in locs.get(&'X').unwrap().iter() {
-        for &(adj_r, adj_c) in ADJACENCIES.iter() {
-            if locs.get(&'M').unwrap().contains(&(r + adj_r, c + adj_c)) &&
-                locs.get(&'A').unwrap().contains(&(r + adj_r * 2, c + adj_c * 2)) &&
-                locs.get(&'S').unwrap().contains(&(r + adj_r * 3, c + adj_c * 3)) {
+    for &start in locs.get(&'X').unwrap().iter() {
+        for &dir in DIRECTIONS.iter() {
+            if has_xmas(&locs, start, dir) {
                 count += 1;
             }
         }
@@ -53,11 +39,21 @@ fn problem1_str(data: String) -> u64 {
 }
 
 fn problem2_str(data: String) -> u64 {
-    let mut locs: HashMap<char, HashSet<(isize, isize)>> = HashMap::from([
-        ('M', HashSet::new()),
-        ('A', HashSet::new()),
-        ('S', HashSet::new()),
-    ]);
+    let locs = point_map(&data, &['M', 'A', 'S']);
+    let mut count = 0;
+    for &start in locs.get(&'A').unwrap().iter() {
+        if has_cross_around(&locs, start) {
+            count += 1;
+        }
+    }
+    count
+}
+
+fn point_map(data: &str, chars: &[char]) -> HashMap<char, HashSet<(isize, isize)>> {
+    let mut locs: HashMap<char, HashSet<(isize, isize)>> = HashMap::new();
+    for ch in chars {
+        locs.insert(*ch, HashSet::new());
+    }
     for (r, line) in data.trim().split("\n").enumerate() {
         for (c, ch) in line.chars().enumerate() {
             if let Some(pts) = locs.get_mut(&ch) {
@@ -65,50 +61,36 @@ fn problem2_str(data: String) -> u64 {
             }
         }
     }
-    let mut count = 0;
-    for &(r, c) in locs.get(&'A').unwrap().iter() {
-        if has_cross_around(&locs, (r, c)) {
-            count += 1;
-        }
-    }
-    count
+    locs
+}
+
+fn has_xmas(locs: &HashMap<char, HashSet<(isize, isize)>>, (r, c): (isize, isize), (dir_r, dir_c): (isize, isize)) -> bool {
+    // assumes we start at an 'X'
+    locs.get(&'M').unwrap().contains(&(r + dir_r, c + dir_c)) &&
+        locs.get(&'A').unwrap().contains(&(r + dir_r * 2, c + dir_c * 2)) &&
+        locs.get(&'S').unwrap().contains(&(r + dir_r * 3, c + dir_c * 3))
 }
 
 fn has_cross_around(locs: &HashMap<char, HashSet<(isize, isize)>>, (r, c): (isize, isize)) -> bool {
-    let nw = if locs.get(&'M').unwrap().contains(&(r - 1, c - 1)) {
-        'M'
-    } else if locs.get(&'S').unwrap().contains(&(r - 1, c - 1)) {
-        'S'
-    } else {
-        '.'
+    // assumes we start at an 'A'
+    let relevant_ch = |pt| -> char {
+        if locs.get(&'M').unwrap().contains(&pt) {
+            'M'
+        } else if locs.get(&'S').unwrap().contains(&pt) {
+            'S'
+        } else {
+            '.'
+        }
     };
-    let ne = if locs.get(&'M').unwrap().contains(&(r - 1, c + 1)) {
-        'M'
-    } else if locs.get(&'S').unwrap().contains(&(r - 1, c + 1)) {
-        'S'
-    } else {
-        '.'
-    };
-    let sw = if locs.get(&'M').unwrap().contains(&(r + 1, c - 1)) {
-        'M'
-    } else if locs.get(&'S').unwrap().contains(&(r + 1, c - 1)) {
-        'S'
-    } else {
-        '.'
-    };
-    let se = if locs.get(&'M').unwrap().contains(&(r + 1, c + 1)) {
-        'M'
-    } else if locs.get(&'S').unwrap().contains(&(r + 1, c + 1)) {
-        'S'
-    } else {
-        '.'
-    };
+    let nw = relevant_ch((r - 1, c - 1));
+    let ne = relevant_ch((r - 1, c + 1));
+    let sw = relevant_ch((r + 1, c - 1));
+    let se = relevant_ch((r + 1, c + 1));
     (nw, ne, se, sw) == ('M', 'M', 'S', 'S') ||
         (nw, ne, se, sw) == ('M', 'S', 'S', 'M') ||
         (nw, ne, se, sw) == ('S', 'S', 'M', 'M') ||
         (nw, ne, se, sw) == ('S', 'M', 'M', 'S')
 }
-
 
 #[cfg(test)]
 mod tests {
