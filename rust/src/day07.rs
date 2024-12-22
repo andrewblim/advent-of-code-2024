@@ -13,41 +13,81 @@ fn read_data() -> String {
         .expect("Error reading file")
 }
 
-fn problem1_str(data: String) -> i64 {
+fn problem1_str(data: String) -> u64 {
     let eqns = data
         .trim()
         .split("\n")
         .map(|line| {
             let (result_str, terms_str) = line.split_once(':').unwrap();
-            let terms: Vec<i64> = terms_str
+            let terms: Vec<u64> = terms_str
                 .trim()
                 .split_whitespace()
-                .map(|term| term.parse::<i64>().unwrap())
+                .map(|term| term.parse::<u64>().unwrap())
                 .collect();
-            (result_str.parse::<i64>().unwrap(), terms)
+            (result_str.parse::<u64>().unwrap(), terms)
         });
     
     eqns
-        .filter(|(result, terms) | valid(*result, terms))
+        .filter(|(result, terms) | valid1(*result, terms))
         .map(|(result, _)| result)
         .sum()
 }
 
-fn problem2_str(data: String) -> i64 {
-    unimplemented!();
+fn problem2_str(data: String) -> u64 {
+    let eqns = data
+        .trim()
+        .split("\n")
+        .map(|line| {
+            let (result_str, terms_str) = line.split_once(':').unwrap();
+            let terms: Vec<u64> = terms_str
+                .trim()
+                .split_whitespace()
+                .map(|term| term.parse::<u64>().unwrap())
+                .collect();
+            (result_str.parse::<u64>().unwrap(), terms)
+        });
+    
+    eqns
+        .filter(|(result, terms) | valid2(*result, terms))
+        .map(|(result, _)| result)
+        .sum()
 }
 
-fn valid(target: i64, terms: &[i64]) -> bool {
+fn valid1(target: u64, terms: &[u64]) -> bool {
     match terms[..] {
         [] => panic!("Zero terms"),
         [a] => a == target,
         _ => {
             let last_term = terms[terms.len() - 1];
-            if target % last_term == 0 {
-                valid(target / last_term, &terms[..(terms.len() - 1)]) ||
-                valid(target - last_term, &terms[..(terms.len() - 1)])
+            if last_term > target {
+                false
+            } else if target % last_term == 0 {
+                valid1(target / last_term, &terms[..(terms.len() - 1)]) ||
+                valid1(target - last_term, &terms[..(terms.len() - 1)])
             } else {
-                valid(target - last_term, &terms[..(terms.len() - 1)])
+                valid1(target - last_term, &terms[..(terms.len() - 1)])
+            }
+        }
+    }
+}
+
+fn valid2(target: u64, terms: &[u64]) -> bool {
+    match terms[..] {
+        [] => panic!("Zero terms"),
+        [a] => a == target,
+        _ => {
+            let last_term = terms[terms.len() - 1];
+            if last_term > target {
+                false
+            } else {
+                let by_add = valid2(target - last_term, &terms[..(terms.len() - 1)]);
+                let by_mult = target % last_term == 0 &&
+                    valid2(target / last_term, &terms[..(terms.len() - 1)]);
+                let last_term_digits = u32::try_from(last_term.to_string().len()).unwrap();
+                let by_concat = (target - last_term) % 10_u64.pow(last_term_digits) == 0 &&
+                    valid2((target - last_term) / 10_u64.pow(last_term_digits), &terms[..(terms.len() - 1)]);
+                
+                by_add || by_mult || by_concat
             }
         }
     }
@@ -78,9 +118,8 @@ mod tests {
         assert_eq!(problem1_str(input1), 3749);
     }
 
-    #[ignore]
     #[rstest]
     fn problem2_test(input1: String) {
-        unimplemented!();
+        assert_eq!(problem2_str(input1), 11387);
     }
 }
