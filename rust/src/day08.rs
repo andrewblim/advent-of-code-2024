@@ -24,25 +24,40 @@ fn problem1_str(data: String) -> usize {
             for loc in antinodes_for1(*p1, *p2, max_row, max_col) {
                 antinodes.insert(loc);
             };
+            for loc in antinodes_for1(*p2, *p1, max_row, max_col) {
+                antinodes.insert(loc);
+            };
         }
     }
     antinodes.len()
 }
 
 fn problem2_str(data: String) -> usize {
-    unimplemented!();
+    let (antennas, max_row, max_col) = parse_board(&data);
+    let mut antinodes = HashSet::new();
+    for (_freq, locations) in antennas.into_iter() {
+        for (p1, p2) in locations.iter().tuple_combinations() {
+            for loc in antinodes_for2(*p1, *p2, max_row, max_col) {
+                antinodes.insert(loc);
+            };
+            for loc in antinodes_for2(*p2, *p1, max_row, max_col) {
+                antinodes.insert(loc);
+            };
+        }
+    }
+    antinodes.len()
 }
 
-fn parse_board(data: &str) -> (HashMap<char, Vec<(usize, usize)>>, usize, usize) {
+fn parse_board(data: &str) -> (HashMap<char, Vec<(i64, i64)>>, i64, i64) {
     let entries = data
         .trim()
         .split("\n")
         .enumerate()
         .flat_map(|(row, line)| {
-            line.chars().enumerate().map(move |(col, ch)| ((row, col), ch) )
+            line.chars().enumerate().map(move |(col, ch)| ((row as i64, col as i64), ch) )
         });
 
-    let mut antennas: HashMap<char, Vec<(usize, usize)>> = HashMap::new();
+    let mut antennas: HashMap<char, Vec<(i64, i64)>> = HashMap::new();
     let (mut max_row, mut max_col) = (0, 0);
     for ((row, col), ch) in entries {
         if ch != '.' {
@@ -56,36 +71,27 @@ fn parse_board(data: &str) -> (HashMap<char, Vec<(usize, usize)>>, usize, usize)
     (antennas, max_row, max_col)
 }
 
-fn antinodes_for1((r1, c1): (usize, usize), (r2, c2): (usize, usize), max_row: usize, max_col: usize) -> Vec<(usize, usize)> {
+fn antinodes_for1((r1, c1): (i64, i64), (r2, c2): (i64, i64), max_row: i64, max_col: i64) -> Vec<(i64, i64)> {
     let mut antinodes = vec![];
-    let (ra1, ra2) = if r2 > r1 {
-        (
-            r1.checked_sub(r2 - r1),
-            if r2 + r2 - r1 > max_row { None } else { Some(r2 + r2 - r1) }
-        )
-    } else {
-        (
-            if r1 + r1 - r2 > max_row { None } else { Some(r1 + r1 - r2) },
-            r2.checked_sub(r1 - r2)
-        )
+    let ra = r2 + r2 - r1;
+    let ca = c2 + c2 - c1;
+    if ra >= 0 && ra <= max_row && ca >= 0 && ca <= max_col {
+        antinodes.push((ra, ca))
     };
-    let (ca1, ca2) = if c2 > c1 {
-        (
-            c1.checked_sub(c2 - c1),
-            if c2 + c2 - c1 > max_col { None } else { Some(c2 + c2 - c1) }
-        )
-    } else {
-        (
-            if c1 + c1 - c2 > max_col { None } else { Some(c1 + c1 - c2) },
-            c2.checked_sub(c1 - c2)
-        )
-    };
-    if let (Some(r), Some(c)) = (ra1, ca1) {
-        antinodes.push((r, c))
-    };
-    if let (Some(r), Some(c)) = (ra2, ca2) {
-        antinodes.push((r, c))
-    };
+    antinodes
+}
+
+fn antinodes_for2((r1, c1): (i64, i64), (r2, c2): (i64, i64), max_row: i64, max_col: i64) -> Vec<(i64, i64)> {
+    let mut antinodes = vec![];
+    let rdiff = r2 - r1;
+    let cdiff = c2 - c1;
+    let mut ra = r2;
+    let mut ca = c2;
+    while ra >= 0 && ra <= max_row && ca >= 0 && ca <= max_col {
+        antinodes.push((ra, ca));
+        ra = ra + rdiff;
+        ca = ca + cdiff;
+    }
     antinodes
 }
 
@@ -117,9 +123,8 @@ mod tests {
         assert_eq!(problem1_str(input1), 14);
     }
 
-    #[ignore]
     #[rstest]
     fn problem2_test(input1: String) {
-        unimplemented!();
+        assert_eq!(problem2_str(input1), 34);
     }
 }
