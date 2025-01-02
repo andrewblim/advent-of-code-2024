@@ -12,6 +12,7 @@ mod day08;
 mod day09;
 mod day10;
 mod day11;
+mod day12;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -45,6 +46,8 @@ fn main() {
             Some((10, 2)) => day10::problem2(),
             Some((11, 1)) => day11::problem1(),
             Some((11, 2)) => day11::problem2(),
+            Some((12, 1)) => day12::problem1(),
+            Some((12, 2)) => day12::problem2(),
             _ => panic!("Unrecognized problem arguments {:?}", args)
         }
     }
