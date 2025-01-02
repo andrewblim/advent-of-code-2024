@@ -1,3 +1,6 @@
+use std::collections::BinaryHeap;
+use std::collections::HashMap;
+use std::cmp::Reverse;
 use std::fs;
 use std::iter;
 
@@ -56,7 +59,73 @@ fn problem1_str(data: String) -> usize {
 }
 
 fn problem2_str(data: String) -> usize {
-    unimplemented!();
+    let mut data = data.trim();
+    if data.len() % 2 == 0 {
+        data = &data[0..data.len() - 2];
+    }
+
+    let mut files: Vec<File> = Vec::new();
+    let mut gaps_by_size: HashMap<usize, BinaryHeap<Reverse<Gap>>> = HashMap::new();
+    let mut pos: usize = 0;
+
+    for (i, ch) in data.chars().enumerate() {
+        let size = ch.to_digit(10).unwrap() as usize;
+        if size > 0 {
+            if i % 2 == 0 {
+                files.push(File { id: i / 2, pos, size });
+            } else {
+                gaps_by_size.entry(size).or_default().push(Reverse(Gap { pos, size }));
+            }
+        } else if i % 2 == 0 {
+            panic!("zero sized file"); // doesn't happen in practice, but enforcing
+        }
+        pos += size;
+    }
+    files.reverse();
+
+    let mut checksum: usize = 0;
+    for file in files {
+        let valid_gap = gaps_by_size.keys()
+            .filter(|&&gap_size| gap_size >= file.size)
+            .flat_map(|gap_size| gaps_by_size.get(&gap_size).unwrap().peek())
+            .filter(|&Reverse(gap)| gap.pos < file.pos)
+            .min_by_key(|&Reverse(gap)| gap.pos);
+        if let Some(&Reverse(ref gap)) = valid_gap {
+            let new_file = File { id: file.id, pos: gap.pos, size: file.size };
+            let new_gap = Gap { pos: gap.pos + file.size, size: gap.size - file.size };
+            gaps_by_size.entry(gap.size).and_modify(|e| { e.pop(); });
+            if new_gap.size > 0 {
+                gaps_by_size.entry(new_gap.size).and_modify(|e| e.push(Reverse(new_gap)));
+            }
+            checksum += new_file.checksum();
+        } else {
+            checksum += file.checksum();
+        }
+    }
+    checksum
+}
+
+#[derive(Debug)]
+struct File {
+    id: usize,
+    pos: usize,
+    size: usize,
+}
+
+impl File {
+    fn checksum(&self) -> usize {
+        if self.size == 0 {
+            0
+        } else {
+            self.id * (self.pos * self.size + self.size * (self.size - 1) / 2)
+        }
+    }
+}
+
+#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
+struct Gap {
+    pos: usize,
+    size: usize,
 }
 
 fn block_size<'a>(data: impl Iterator<Item = char> + 'a) -> usize {
@@ -90,9 +159,8 @@ mod tests {
         assert_eq!(problem1_str(input1), 1928);
     }
 
-    #[ignore]
     #[rstest]
     fn problem2_test(input1: String) {
-        unimplemented!();
+        assert_eq!(problem2_str(input1), 2858);
     }
 }
