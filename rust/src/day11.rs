@@ -1,4 +1,5 @@
-use std::fs;
+use std::{collections::HashMap, fs};
+use itertools::Itertools;
 
 pub fn problem1() {
     println!("{}", problem1_str(read_data()));
@@ -14,34 +15,42 @@ fn read_data() -> String {
 }
 
 fn problem1_str(data: String) -> usize {
-    let mut stones: Vec<usize> = data.trim()
+    let mut stones = data.trim()
         .split_whitespace()
         .map(|x| x.parse::<usize>().unwrap())
-        .collect();
+        .counts();
     
     for _ in 0..25 {
         stones = transform_stones(&stones);
     }
-    stones.len()
+    stones.values().sum()
 }
 
 fn problem2_str(data: String) -> usize {
-    unimplemented!();
+    let mut stones = data.trim()
+        .split_whitespace()
+        .map(|x| x.parse::<usize>().unwrap())
+        .counts();
+    
+    for _ in 0..75 {
+        stones = transform_stones(&stones);
+    }
+    stones.values().sum()
 }
 
-fn transform_stones(stones: &[usize]) -> Vec<usize> {
-    let mut new_stones = Vec::new();
-    for &stone in stones {
+fn transform_stones(stones: &HashMap<usize, usize>) -> HashMap<usize, usize> {
+    let mut new_stones = HashMap::new();
+    for (&stone, &count) in stones {
         if stone == 0 {
-            new_stones.push(1);
+            new_stones.entry(1).and_modify(|e| *e += count).or_insert(count);
         } else {
             let n_digits = (stone as f64).log10().floor() as u32 + 1;
             if n_digits % 2 == 0 {
                 let divisor = 10_usize.checked_pow(n_digits / 2).unwrap();
-                new_stones.push(stone / divisor);
-                new_stones.push(stone % divisor);
+                new_stones.entry(stone / divisor).and_modify(|e| *e += count).or_insert(count);
+                new_stones.entry(stone % divisor).and_modify(|e| *e += count).or_insert(count);
             } else {
-                new_stones.push(stone * 2024);
+                new_stones.entry(stone * 2024).and_modify(|e| *e += count).or_insert(count);
             }
         }
     }
